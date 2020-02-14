@@ -2,6 +2,10 @@
 import dash_table
 from dashpractice.data import get_data
 
+"""
+help documentation - https://dash.plot.ly/datatable
+"""
+
 
 def get_data_table_child():
     # TODO: docstr
