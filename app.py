@@ -7,6 +7,7 @@ if module_path not in sys.path:
 
 import dash
 import dash_html_components as html
+import dash_core_components as dcc
 from dash.dependencies import Input, Output
 import dash_auth
 from dashpractice.layout.barchart import get_barchart_children
@@ -42,23 +43,58 @@ auth = dash_auth.BasicAuth(
     app,
     VALID_USERNAME_PASSWORD_PAIRS
 )
+# app.config.suppress_callback_exceptions = True
+
+
+def get_layout_children(page_name):
+    # TODO: docstr
+    children = [dcc.Dropdown(  # initialise
+        id='index-menu',
+        options=[
+            {'label': 'Show all', 'value': 'all'},
+            {'label': 'Show barplot', 'value': 'barplot'},
+            {'label': 'Show scatter plot', 'value': 'scatter'}
+        ],
+        value=page_name  # default value
+    )]
+
+    if page_name == 'all':
+        children += (
+            get_barchart_children() +
+            [get_data_table_child(), get_scatter_plot_child()] +
+            [get_text_child()] +
+            [html.Label('Dropdown'), get_single_select_dropdown_child()] +
+            [html.Label('Multi-Select Dropdown'),
+             get_multi_select_dropdown_child()] +
+            [html.Label('Radio Items'), get_radio_button_child()] +
+            [html.Label('Checkboxes'), get_checklist_child()] +
+            [html.Label('Text Box'), get_input_text_child(),
+             html.Div(id='output-of-text-input-div')]
+        )
+    elif page_name == 'barplot':
+        children += get_barchart_children()
+    elif page_name == 'scatter':
+        children += [get_scatter_plot_child()]
+    else:
+        raise ValueError(f"unrecognised page_name {page_name}")
+
+    return children
 
 
 app.layout = html.Div(
+    id='dashboard',
     style={'backgroundColor': COLOURS['background']},
-    children=(
-        get_barchart_children() +
-        [get_data_table_child(), get_scatter_plot_child()] +
-        [get_text_child()] +
-        [html.Label('Dropdown'), get_single_select_dropdown_child()] +
-        [html.Label('Multi-Select Dropdown'),
-         get_multi_select_dropdown_child()] +
-        [html.Label('Radio Items'), get_radio_button_child()] +
-        [html.Label('Checkboxes'), get_checklist_child()] +
-        [html.Label('Text Box'), get_input_text_child(),
-         html.Div(id='output-of-text-input-div')]
-    )
+    children=get_layout_children(page_name='all')
 )
+
+
+@app.callback(
+    Output(component_id='dashboard', component_property='children'),
+    [Input(component_id='index-menu', component_property='value')]
+)
+def get_layout_children_callback(page_name):
+    # TODO: docstr
+    return get_layout_children(page_name=page_name)
 
 
 @app.callback(
